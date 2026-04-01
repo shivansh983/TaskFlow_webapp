@@ -1,21 +1,15 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import Login from './components/Login';
-import Register from './components/Register';
-import Dashboard from './components/Dashboard';
+import Login from './components/login';
+import Register from './components/register';
+import Dashboard from './components/dashboard';
 import './index.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
+  const [showRegister, setShowRegister] = useState(true); // ← start on Register page
   const [loading, setLoading] = useState(true);
-
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('access_token');
-    return { headers: { Authorization: `Bearer ${token}` } };
-  };
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
@@ -27,12 +21,11 @@ function App() {
     setLoading(false);
   }, []);
 
-  // ← FIX: proper logout clears both tokens and resets all state
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     setIsAuthenticated(false);
-    setShowRegister(false);
+    setShowRegister(false); // ← logout goes to Login, not Register
   };
 
   if (loading) {
@@ -48,11 +41,7 @@ function App() {
   }
 
   if (isAuthenticated) {
-    return (
-      <Dashboard
-        onLogout={handleLogout}
-      />
-    );
+    return <Dashboard onLogout={handleLogout} />;
   }
 
   if (showRegister) {
