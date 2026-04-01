@@ -31,8 +31,10 @@ function Register({ onSwitch }) {
     setLoading(true);
     try {
       await axios.post(`${API_URL}/register/`, formData);
-      setSuccess('Account created! You can now sign in.');
+      setSuccess('Account created! Redirecting to login...');
       setFormData({ username: '', email: '', password: '', password2: '' });
+      // ← auto-redirect to login after 2 seconds
+      setTimeout(() => onSwitch(), 2000);
     } catch (err) {
       const data = err.response?.data;
       if (data) {
@@ -51,7 +53,7 @@ function Register({ onSwitch }) {
     padding: '0.5rem',
     marginBottom: '0.75rem',
     border: '1px solid #d1d5db',
-    borderRadius: '0.25rem'
+    borderRadius: '0.25rem',
   };
 
   return (
@@ -96,14 +98,22 @@ function Register({ onSwitch }) {
             style={inputStyle}
             required
           />
-          {error && <p style={{ color: '#ef4444', fontSize: '0.875rem', marginBottom: '0.75rem', textAlign: 'center' }}>{error}</p>}
-          {success && <p style={{ color: '#10b981', fontSize: '0.875rem', marginBottom: '0.75rem', textAlign: 'center' }}>{success}</p>}
+          {error && (
+            <p style={{ color: '#ef4444', fontSize: '0.875rem', marginBottom: '0.75rem', textAlign: 'center' }}>
+              {error}
+            </p>
+          )}
+          {success && (
+            <p style={{ color: '#10b981', fontSize: '0.875rem', marginBottom: '0.75rem', textAlign: 'center' }}>
+              {success}
+            </p>
+          )}
           <button
             type="submit"
             disabled={loading}
-            style={{ width: '100%', backgroundColor: '#3b82f6', color: 'white', padding: '0.5rem', borderRadius: '0.25rem', border: 'none', cursor: 'pointer' }}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#3b82f6'}
+            style={{ width: '100%', backgroundColor: '#3b82f6', color: 'white', padding: '0.5rem', borderRadius: '0.25rem', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+            onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = '#2563eb')}
+            onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = '#3b82f6')}
           >
             {loading ? 'Creating account...' : 'Sign Up'}
           </button>
