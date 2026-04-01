@@ -6,8 +6,7 @@ import NotificationBell from './NotificationBell';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
-function Dashboard({ onLogout, globalUserRole }) {
-  console.log('Dashboard rendered with globalUserRole:', globalUserRole);
+function Dashboard({ onLogout }) {
   const [projects, setProjects] = useState([]);
   const [projectTaskTitles, setProjectTaskTitles] = useState({});
   const [showModal, setShowModal] = useState(false);
@@ -24,6 +23,13 @@ function Dashboard({ onLogout, globalUserRole }) {
     return { headers: { Authorization: `Bearer ${token}` } };
   };
 
+  // ← FIX: proper logout using the prop, not window.location.reload()
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    onLogout();
+  };
+
   useEffect(() => {
     loadProjects();
   }, []);
@@ -32,7 +38,6 @@ function Dashboard({ onLogout, globalUserRole }) {
     try {
       const projectResponse = await axios.get(`${API_URL}/projects/`, getAuthHeaders());
       const activeProjects = projectResponse.data;
-      console.log('Loaded projects:', activeProjects);
       setProjects(activeProjects);
 
       const tasksResponse = await axios.get(`${API_URL}/tasks/`, getAuthHeaders());
@@ -52,8 +57,10 @@ function Dashboard({ onLogout, globalUserRole }) {
     } catch (error) {
       console.error('Error loading projects:', error);
       if (error.response?.status === 401) {
+        // ← FIX: use onLogout prop instead of window.location.reload()
         localStorage.removeItem('access_token');
-        window.location.reload();
+        localStorage.removeItem('refresh_token');
+        onLogout();
       }
     } finally {
       setLoading(false);
@@ -66,10 +73,8 @@ function Dashboard({ onLogout, globalUserRole }) {
     const name = project.name?.toLowerCase() || '';
     const description = project.description?.toLowerCase() || '';
     const taskTitles = projectTaskTitles[project.id] || [];
-
     const projectMatch = name.includes(query) || description.includes(query);
     const taskTitleMatch = taskTitles.some((title) => title.includes(query));
-
     return projectMatch || taskTitleMatch;
   });
 
@@ -104,7 +109,8 @@ function Dashboard({ onLogout, globalUserRole }) {
   const handleUpdateProject = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${API_URL}/projects/${editingProject.id}/`,
+      await axios.put(
+        `${API_URL}/projects/${editingProject.id}/`,
         { name: editingProject.name, description: editingProject.description },
         getAuthHeaders()
       );
@@ -117,16 +123,18 @@ function Dashboard({ onLogout, globalUserRole }) {
   };
 
   const handleProjectClick = (project) => {
-    console.log('Project clicked:', project);
     setSelectedProject(project);
   };
 
   if (loading) {
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#f8fafc', color: '#64748b' }}>Loading projects...</div>;
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#f8fafc', color: '#64748b' }}>
+        Loading projects...
+      </div>
+    );
   }
 
   if (selectedProject) {
-    console.log('Rendering ProjectBoard for project:', selectedProject);
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.5rem' }}>
@@ -140,8 +148,25 @@ function Dashboard({ onLogout, globalUserRole }) {
     );
   }
 
-  const inputStyle = { width: '100%', padding: '0.75rem 1rem', border: '1px solid #e2e8f0', borderRadius: '0.5rem', fontSize: '0.95rem', outline: 'none', transition: 'border-color 0.2s' };
-  const btnStyle = { padding: '0.625rem 1.25rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', fontWeight: '500', fontSize: '0.9rem', transition: 'all 0.2s' };
+  const inputStyle = {
+    width: '100%',
+    padding: '0.75rem 1rem',
+    border: '1px solid #e2e8f0',
+    borderRadius: '0.5rem',
+    fontSize: '0.95rem',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+  };
+
+  const btnStyle = {
+    padding: '0.625rem 1.25rem',
+    borderRadius: '0.5rem',
+    border: 'none',
+    cursor: 'pointer',
+    fontWeight: '500',
+    fontSize: '0.9rem',
+    transition: 'all 0.2s',
+  };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
@@ -149,11 +174,13 @@ function Dashboard({ onLogout, globalUserRole }) {
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <NotificationBell />
-            <h1 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.025em', marginLeft: '0.5rem' }}>TaskFlow</h1>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.025em', marginLeft: '0.5rem' }}>
+              TaskFlow
+            </h1>
           </div>
-          
+          {/* ← FIX: use handleLogout instead of onLogout directly */}
           <button
-            onClick={onLogout}
+            onClick={handleLogout}
             style={{ ...btnStyle, backgroundColor: '#f1f5f9', color: '#64748b' }}
             onMouseEnter={e => e.target.style.backgroundColor = '#e2e8f0'}
             onMouseLeave={e => e.target.style.backgroundColor = '#f1f5f9'}
@@ -179,16 +206,15 @@ function Dashboard({ onLogout, globalUserRole }) {
                 onBlur={e => e.target.style.borderColor = '#e2e8f0'}
               />
             </div>
-            {globalUserRole && (
-              <button
-                onClick={() => setShowModal(true)}
-                style={{ ...btnStyle, backgroundColor: '#4f46e5', color: 'white', borderRadius: '2rem', boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)' }}
-                onMouseEnter={e => e.target.style.backgroundColor = '#4338ca'}
-                onMouseLeave={e => e.target.style.backgroundColor = '#4f46e5'}
-              >
-                + New Project
-              </button>
-            )}
+            {/* ← FIX: removed globalUserRole condition — show button to all logged-in users */}
+            <button
+              onClick={() => setShowModal(true)}
+              style={{ ...btnStyle, backgroundColor: '#4f46e5', color: 'white', borderRadius: '2rem', boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)', whiteSpace: 'nowrap' }}
+              onMouseEnter={e => e.target.style.backgroundColor = '#4338ca'}
+              onMouseLeave={e => e.target.style.backgroundColor = '#4f46e5'}
+            >
+              + New Project
+            </button>
           </div>
         </div>
 
@@ -196,9 +222,7 @@ function Dashboard({ onLogout, globalUserRole }) {
           <div style={{ textAlign: 'center', padding: '4rem', backgroundColor: 'white', borderRadius: '1rem', border: '1px dashed #cbd5e1' }}>
             <p style={{ color: '#64748b', fontSize: '1.1rem' }}>
               {projects.length === 0
-                ? globalUserRole === 'admin'
-                  ? 'No projects yet. Create your first project!'
-                  : 'No projects yet. You have not been invited to any project yet.'
+                ? 'No projects yet. Create your first project!'
                 : 'No projects match your search criteria.'}
             </p>
           </div>
@@ -217,11 +241,11 @@ function Dashboard({ onLogout, globalUserRole }) {
                   transition: 'all 0.2s ease',
                   display: 'flex',
                   flexDirection: 'column',
-                  height: '100%'
+                  height: '100%',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+                  e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)';
                   e.currentTarget.style.borderColor = '#cbd5e1';
                 }}
                 onMouseLeave={(e) => {
@@ -231,12 +255,14 @@ function Dashboard({ onLogout, globalUserRole }) {
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#0f172a', marginBottom: '0.5rem' }}>{project.name}</h3>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#0f172a', marginBottom: '0.5rem' }}>
+                    {project.name}
+                  </h3>
                   <p style={{ color: '#64748b', fontSize: '0.95rem', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {project.description || 'No description provided.'}
                   </p>
                 </div>
-                
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
                   <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '500' }}>
                     Created: {new Date(project.created_at).toLocaleDateString()}
@@ -266,13 +292,12 @@ function Dashboard({ onLogout, globalUserRole }) {
         )}
       </div>
 
-      {/* Modals Overlay */}
+      {/* Modals */}
       {(showModal || showEditModal) && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
-          
-          {/* Create Modal */}
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+
           {showModal && (
-            <div style={{ backgroundColor: 'white', padding: '2.5rem', borderRadius: '1rem', width: '100%', maxWidth: '28rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+            <div style={{ backgroundColor: 'white', padding: '2.5rem', borderRadius: '1rem', width: '100%', maxWidth: '28rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0f172a', marginBottom: '1.5rem' }}>Create New Project</h3>
               <form onSubmit={handleCreateProject}>
                 <input
@@ -280,14 +305,14 @@ function Dashboard({ onLogout, globalUserRole }) {
                   placeholder="Project Name"
                   value={newProject.name}
                   onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                  style={{...inputStyle, marginBottom: '1rem'}}
+                  style={{ ...inputStyle, marginBottom: '1rem' }}
                   required
                 />
                 <textarea
                   placeholder="Description"
                   value={newProject.description}
                   onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                  style={{...inputStyle, marginBottom: '1.5rem', resize: 'vertical', minHeight: '100px'}}
+                  style={{ ...inputStyle, marginBottom: '1.5rem', resize: 'vertical', minHeight: '100px' }}
                   rows="3"
                 />
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
@@ -298,9 +323,8 @@ function Dashboard({ onLogout, globalUserRole }) {
             </div>
           )}
 
-          {/* Edit Modal */}
           {showEditModal && editingProject && (
-            <div style={{ backgroundColor: 'white', padding: '2.5rem', borderRadius: '1rem', width: '100%', maxWidth: '28rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' }}>
+            <div style={{ backgroundColor: 'white', padding: '2.5rem', borderRadius: '1rem', width: '100%', maxWidth: '28rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0f172a', marginBottom: '1.5rem' }}>Edit Project</h3>
               <form onSubmit={handleUpdateProject}>
                 <input
@@ -308,14 +332,14 @@ function Dashboard({ onLogout, globalUserRole }) {
                   placeholder="Project Name"
                   value={editingProject.name}
                   onChange={(e) => setEditingProject({ ...editingProject, name: e.target.value })}
-                  style={{...inputStyle, marginBottom: '1rem'}}
+                  style={{ ...inputStyle, marginBottom: '1rem' }}
                   required
                 />
                 <textarea
                   placeholder="Description"
                   value={editingProject.description}
                   onChange={(e) => setEditingProject({ ...editingProject, description: e.target.value })}
-                  style={{...inputStyle, marginBottom: '1.5rem', resize: 'vertical', minHeight: '100px'}}
+                  style={{ ...inputStyle, marginBottom: '1.5rem', resize: 'vertical', minHeight: '100px' }}
                   rows="3"
                 />
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
@@ -326,6 +350,14 @@ function Dashboard({ onLogout, globalUserRole }) {
             </div>
           )}
         </div>
+      )}
+
+      {/* Invite Modal */}
+      {inviteProject && (
+        <InviteModal
+          project={inviteProject}
+          onClose={() => setInviteProject(null)}
+        />
       )}
     </div>
   );
