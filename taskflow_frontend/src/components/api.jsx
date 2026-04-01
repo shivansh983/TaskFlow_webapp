@@ -1,13 +1,16 @@
 import axios from 'axios';
 
 // Automatically switches between local and production URLs
+
+//  baseURL to include the /api/ prefix
 const API_URL = window.location.hostname === 'localhost' 
   ? 'http://127.0.0.1:8000/api' 
-  : 'https://taskflow-webapp.onrender.com/api';
+  : 'https://taskflow-webapp.onrender.com/api'; 
 
 const api = axios.create({
   baseURL: API_URL,
 });
+
 
 // Interceptor to attach the JWT to every request
 api.interceptors.request.use((config) => {
