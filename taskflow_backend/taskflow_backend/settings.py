@@ -28,7 +28,6 @@ CORS_ALLOWED_ORIGINS = [
 
 
 # 2. Configure CORS
-CORS_ALLOW_ALL_ORIGINS = True 
 CORS_ALLOW_CREDENTIALS = True
 
 # 3. Add CSRF Trusted Origins (Crucial for Login/Signup)
