@@ -1,15 +1,84 @@
-🚀 TaskFlowThe Intelligent Collaborative Task & Project Management SystemTaskFlow is a production-ready, full-stack workspace designed to eliminate "information silos" in small teams. By merging a fluid drag-and-drop Kanban interface with a robust Django REST API, it provides a centralized "source of truth" for project progress and team accountability.🔗 Live Production LinkDeployment Status: 🏗️ Building on Render > Live Demo: https://taskflow-webapp.onrender.comNote: Free-tier instances may take ~50s to wake up on the first visit.💡 The "Why" Behind TaskFlowThe Problem: Small teams often lose track of "who is doing what" because updates are buried in chat logs or static spreadsheets, leading to missed deadlines and overlapping work.The Solution: TaskFlow solves this by providing a Visual Audit Trail. Every task movement is tracked, every role is defined, and every team member stays aligned through real-time updates and clear status visualization.✨ Core FeaturesFeatureDescription🔐 Secure AuthJWT-based authentication with cryptographically hashed passwords.📋 Kanban BoardFluid drag-and-drop task management powered by @dnd-kit.👥 Team RBACRole-Based Access Control (Admins vs. Members) for project security.⏱️ Activity LogA chronological history of every change made within a project.🔔 Smart AlertsIn-app notifications for task assignments and upcoming deadlines.🔍 Power SearchFilter by priority, status, or assignee to find tasks instantly.🏗️ Technical ArchitectureTaskFlow is built on a Decoupled Client-Server Architecture to ensure a snappy, modern user experience.Frontend (The Experience)React 18 (Vite): Blazing fast UI rendering.Axios Interceptors: Automated JWT handling for seamless, secure API sessions.Responsive CSS: A custom "Slate & Indigo" design system built for all screen sizes.Backend (The Engine)Django REST Framework: Robust API logic and high-performance routing.SimpleJWT: Stateless authentication for enhanced security.PostgreSQL: Scalable relational data modeling for Users, Projects, and Tasks.📖 User Guide: The Collaboration FlowTo see the true power of TaskFlow, try this Multi-User Test:Host: Register as User A and create a project called "TaskFlow Demo."Invite: Open Project Settings and invite User B (use a secondary email).Assign: Create a "High Priority" task and assign it to User B.Collaborate: Log in as User B (Incognito window). Move the task to Done.Verify: As User A, check your Activity Log—you'll see exactly when User B finished the task.🛠️ Local Installation1. Backend (Python/Django)Bashcd taskflow_backend
+🚀 TaskFlow
+The Intelligent Collaborative Task & Project Management System
+[
+[
+[
+[
+
+TaskFlow eliminates "information silos" in small teams by merging a fluid drag-and-drop Kanban interface with a robust Django REST API. Your centralized "source of truth" for project progress and team accountability.
+
+Live Demo: https://taskflow-webapp.onrender.com
+Note: Free-tier instances may take ~50s to wake up on first visit
+
+💡 Why TaskFlow?
+The Problem
+Small teams lose track of "who is doing what" because updates are buried in:
+
+💬 Chat logs
+
+📊 Static spreadsheets
+
+❌ Missed deadlines & overlapping work
+
+The Solution
+TaskFlow provides a Visual Audit Trail:
+
+✅ Every task movement tracked
+
+👥 Every role clearly defined
+
+🔄 Real-time updates & status visualization
+
+✨ Core Features
+Feature	Description
+🔐 Secure Auth	JWT-based authentication with hashed passwords
+📋 Kanban Board	Fluid drag-and-drop powered by @dnd-kit
+👥 Team RBAC	Role-Based Access Control (Admins vs Members)
+⏱️ Activity Log	Chronological history of every project change
+🔔 Smart Alerts	In-app notifications for assignments & deadlines
+🔍 Power Search	Filter by priority, status, or assignee instantly
+🏗️ Technical Architecture
+text
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Frontend      │◄──►│   Django REST    │◄──►│  PostgreSQL     │
+│  React 18 +     │    │     API          │    │                 │
+│   Vite + Axios  │    │  + SimpleJWT     │    │  Users/Projects │
+└─────────────────┘    └──────────────────┘    │     + Tasks     │
+                                                └─────────────────┘
+Frontend: React 18 (Vite) - Axios Interceptors - Responsive "Slate & Indigo" Design
+Backend: Django REST Framework - SimpleJWT - PostgreSQL
+
+📖 Quick Start Guide
+🔗 Multi-User Test Flow (Try this!)
+Host: Register as User A → Create "TaskFlow Demo" project
+
+Invite: Project Settings → Invite User B (secondary email)
+
+Assign: Create "High Priority" task → Assign to User B
+
+Collaborate: Login as User B (Incognito) → Drag task to "Done"
+
+Verify: User A checks Activity Log → See exact timestamp!
+
+🛠️ Local Installation
+Backend (Django)
+bash
+cd taskflow_backend
 python -m venv venv
-
-# Windows:
-venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
-
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate  # Windows
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
-2. Frontend (React/Vite)Bashcd taskflow_frontend
+Frontend (React)
+bash
+cd taskflow_frontend
 npm install
 npm run dev
-🚧 Roadmap & Future Patches[x] Core Kanban: Fully functional drag-and-drop logic.[x] Auth System: Secure JWT login/registration.[ ] Current Focus: Optimizing Render deployment & UI Polish.[ ] Upcoming: Real-time WebSockets (Django Channels) & Email Reminders.
+🚧 Roadmap
+Status	Feature	Priority
+✅	Core Kanban drag-and-drop	High
+✅	Secure JWT Auth System	High
+🔄	Render deployment optimization	High
+⏳	Real-time WebSockets (Django Channels)	Medium
+⏳	Email reminders & notifications	Medium
