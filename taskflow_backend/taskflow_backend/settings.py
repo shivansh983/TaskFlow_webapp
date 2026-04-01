@@ -42,8 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
+    'drf_yasg',
     'django.contrib.messages',
-    'whitenoise.runserver_nostatic', # Add this for better static handling
+    'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
@@ -92,7 +93,7 @@ ROOT_URLCONF = 'taskflow_backend.urls'
 
 ASGI_APPLICATION = 'taskflow_backend.asgi.application'
 
-# Production-ready Channel Layer (Note: Render needs a Redis instance for this to work in production)
+# Channel Layer (Note: Render needs a Redis instance for this to work in production)
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer', # OK for single-instance Free tier
@@ -135,7 +136,7 @@ DATABASES = {
     )
 }
 
-# Static files (Fix for the build error)
+# Static files 
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
