@@ -2,6 +2,9 @@
 
 > A production-ready full-stack application for teams to manage projects, assign tasks, and collaborate in real time — with a fluid Kanban board, role-based access, live WebSocket updates, and in-app notifications.
 
+<img width="2559" height="1317" alt="Screenshot 2026-04-01 130340" src="https://github.com/user-attachments/assets/3a7f601a-61c8-4091-9b25-fe58d535ed63" />
+
+
 (## UNDER--PROGRESS ##)
 **Live Demo:** https://taskflow-client-lo2o.onrender.com/
 > ⚠️ Hosted on Render's free tier — first load may take ~50s to wake the server. 
@@ -23,6 +26,9 @@
 
 ---
 
+<img width="2555" height="1334" alt="Screenshot 2026-04-01 130454" src="https://github.com/user-attachments/assets/e5d40327-5e77-49e7-9417-769ab710d027" />
+
+
 ## Overview
 
 Small teams lose track of progress because updates are buried in chat logs, static spreadsheets, and missed check-ins. TaskFlow solves this with a centralized, real-time workspace where every task movement is tracked, every role is clearly defined, and nothing falls through the cracks.
@@ -33,6 +39,7 @@ Small teams lose track of progress because updates are buried in chat logs, stat
 - Role-aware UI — admins and members see different controls, automatically
 
 ---
+
 
 ## Feature Breakdown
 
@@ -72,6 +79,11 @@ Small teams lose track of progress because updates are buried in chat logs, stat
 - Filter by priority (Low / Medium / High)
 - Filters stack — combine search + status + priority simultaneously
 - Result count updates in real time
+
+
+<img width="2550" height="1333" alt="Screenshot 2026-04-01 130527" src="https://github.com/user-attachments/assets/3153bdce-de0f-41c6-ad00-73804b52118a" />
+
+
 
 ---
 
