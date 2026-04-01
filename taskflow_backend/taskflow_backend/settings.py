@@ -21,6 +21,12 @@ ALLOWED_HOSTS = [
     '127.0.0.1'
 ]
 
+CORS_ALLOWED_ORIGINS = [
+    "https://taskflow-client-lo2o.onrender.com",
+    "http://localhost:5173",
+]
+
+
 # 2. Configure CORS
 CORS_ALLOW_ALL_ORIGINS = True 
 CORS_ALLOW_CREDENTIALS = True
