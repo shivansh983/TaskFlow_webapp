@@ -6,6 +6,16 @@ import NotificationBell from './NotificationBell';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
+function useWindowSize() {
+  const [width, setWidth] = useState(window.innerWidth);
+  useEffect(() => {
+    const handle = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', handle);
+    return () => window.removeEventListener('resize', handle);
+  }, []);
+  return width;
+}
+
 function Dashboard({ onLogout }) {
   const [projects, setProjects] = useState([]);
   const [projectTaskTitles, setProjectTaskTitles] = useState({});
@@ -18,21 +28,22 @@ function Dashboard({ onLogout }) {
   const [inviteProject, setInviteProject] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const width = useWindowSize();
+  const isMobile = width < 640;
+  const isTablet = width >= 640 && width < 1024;
+
   const getAuthHeaders = () => {
     const token = localStorage.getItem('access_token');
     return { headers: { Authorization: `Bearer ${token}` } };
   };
 
-  // ← FIX: proper logout using the prop, not window.location.reload()
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     onLogout();
   };
 
-  useEffect(() => {
-    loadProjects();
-  }, []);
+  useEffect(() => { loadProjects(); }, []);
 
   const loadProjects = async () => {
     try {
@@ -43,21 +54,14 @@ function Dashboard({ onLogout }) {
       const tasksResponse = await axios.get(`${API_URL}/tasks/`, getAuthHeaders());
       const tasks = tasksResponse.data;
       const taskTitleMap = {};
-
       tasks.forEach((task) => {
-        if (!taskTitleMap[task.project]) {
-          taskTitleMap[task.project] = [];
-        }
-        if (task.title) {
-          taskTitleMap[task.project].push(task.title.toLowerCase());
-        }
+        if (!taskTitleMap[task.project]) taskTitleMap[task.project] = [];
+        if (task.title) taskTitleMap[task.project].push(task.title.toLowerCase());
       });
-
       setProjectTaskTitles(taskTitleMap);
     } catch (error) {
       console.error('Error loading projects:', error);
       if (error.response?.status === 401) {
-        // ← FIX: use onLogout prop instead of window.location.reload()
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         onLogout();
@@ -73,9 +77,7 @@ function Dashboard({ onLogout }) {
     const name = project.name?.toLowerCase() || '';
     const description = project.description?.toLowerCase() || '';
     const taskTitles = projectTaskTitles[project.id] || [];
-    const projectMatch = name.includes(query) || description.includes(query);
-    const taskTitleMatch = taskTitles.some((title) => title.includes(query));
-    return projectMatch || taskTitleMatch;
+    return name.includes(query) || description.includes(query) || taskTitles.some(t => t.includes(query));
   });
 
   const handleCreateProject = async (e) => {
@@ -91,7 +93,7 @@ function Dashboard({ onLogout }) {
   };
 
   const handleDeleteProject = async (projectId) => {
-    if (window.confirm('Are you sure you want to delete this project? All tasks will be deleted too.')) {
+    if (window.confirm('Delete this project? All tasks will be deleted too.')) {
       try {
         await axios.delete(`${API_URL}/projects/${projectId}/`, getAuthHeaders());
         loadProjects();
@@ -122,10 +124,6 @@ function Dashboard({ onLogout }) {
     }
   };
 
-  const handleProjectClick = (project) => {
-    setSelectedProject(project);
-  };
-
   if (loading) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#f8fafc', color: '#64748b' }}>
@@ -136,15 +134,12 @@ function Dashboard({ onLogout }) {
 
   if (selectedProject) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '1.5rem' }}>
-          <ProjectBoard
-            project={selectedProject}
-            onBack={() => setSelectedProject(null)}
-            userRole={selectedProject.user_role}
-          />
-        </div>
-      </div>
+      <ProjectBoard
+        project={selectedProject}
+        onBack={() => setSelectedProject(null)}
+        onLogout={handleLogout}
+        userRole={selectedProject.user_role}
+      />
     );
   }
 
@@ -155,7 +150,7 @@ function Dashboard({ onLogout }) {
     borderRadius: '0.5rem',
     fontSize: '0.95rem',
     outline: 'none',
-    transition: 'border-color 0.2s',
+    boxSizing: 'border-box',
   };
 
   const btnStyle = {
@@ -168,119 +163,145 @@ function Dashboard({ onLogout }) {
     transition: 'all 0.2s',
   };
 
+  // Grid: 1 col mobile, 2 col tablet, auto-fill desktop
+  const gridCols = isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(auto-fill, minmax(320px, 1fr))';
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      <nav style={{ backgroundColor: 'white', borderBottom: '1px solid #e2e8f0', padding: '1rem 2rem', position: 'sticky', top: 0, zIndex: 10 }}>
+
+      {/* Navbar */}
+      <nav style={{
+        backgroundColor: 'white',
+        borderBottom: '1px solid #e2e8f0',
+        padding: isMobile ? '0.75rem 1rem' : '1rem 2rem',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+      }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <NotificationBell />
-            <h1 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.025em', marginLeft: '0.5rem' }}>
+            <h1 style={{ fontSize: isMobile ? '1rem' : '1.25rem', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.025em' }}>
               TaskFlow
             </h1>
           </div>
-          {/* ← FIX: use handleLogout instead of onLogout directly */}
           <button
             onClick={handleLogout}
-            style={{ ...btnStyle, backgroundColor: '#f1f5f9', color: '#64748b' }}
-            onMouseEnter={e => e.target.style.backgroundColor = '#e2e8f0'}
-            onMouseLeave={e => e.target.style.backgroundColor = '#f1f5f9'}
+            style={{ ...btnStyle, backgroundColor: '#f1f5f9', color: '#64748b', padding: isMobile ? '0.5rem 0.75rem' : '0.625rem 1.25rem', fontSize: isMobile ? '0.8rem' : '0.9rem' }}
           >
             Logout
           </button>
         </div>
       </nav>
 
-      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2.5rem 2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#0f172a' }}>My Projects</h2>
-          <div style={{ display: 'flex', flex: '1', maxWidth: '500px', gap: '1rem', justifyContent: 'flex-end' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: isMobile ? '1.25rem 1rem' : '2.5rem 2rem' }}>
+
+        {/* Page header */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between',
+          alignItems: isMobile ? 'stretch' : 'center',
+          marginBottom: '1.5rem',
+          gap: '1rem',
+        }}>
+          <h2 style={{ fontSize: isMobile ? '1.4rem' : '1.75rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+            My Projects
+          </h2>
+
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            {/* Search */}
             <div style={{ position: 'relative', flex: 1 }}>
-              <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}>🔍</span>
+              <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: '0.9rem' }}>🔍</span>
               <input
                 type="text"
                 placeholder="Search projects..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ ...inputStyle, paddingLeft: '2.5rem', borderRadius: '2rem' }}
+                style={{ ...inputStyle, paddingLeft: '2.25rem', borderRadius: '2rem', fontSize: '0.875rem' }}
                 onFocus={e => e.target.style.borderColor = '#4f46e5'}
                 onBlur={e => e.target.style.borderColor = '#e2e8f0'}
               />
             </div>
-            {/* ← FIX: removed globalUserRole condition — show button to all logged-in users */}
             <button
               onClick={() => setShowModal(true)}
-              style={{ ...btnStyle, backgroundColor: '#4f46e5', color: 'white', borderRadius: '2rem', boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)', whiteSpace: 'nowrap' }}
-              onMouseEnter={e => e.target.style.backgroundColor = '#4338ca'}
-              onMouseLeave={e => e.target.style.backgroundColor = '#4f46e5'}
+              style={{ ...btnStyle, backgroundColor: '#4f46e5', color: 'white', whiteSpace: 'nowrap', flexShrink: 0, padding: isMobile ? '0.625rem 1rem' : '0.625rem 1.25rem' }}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = '#4338ca'}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = '#4f46e5'}
             >
-              + New Project
+              {isMobile ? '+ New' : '+ New Project'}
             </button>
           </div>
         </div>
 
+        {/* Project grid */}
         {filteredProjects.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '4rem', backgroundColor: 'white', borderRadius: '1rem', border: '1px dashed #cbd5e1' }}>
-            <p style={{ color: '#64748b', fontSize: '1.1rem' }}>
-              {projects.length === 0
-                ? 'No projects yet. Create your first project!'
-                : 'No projects match your search criteria.'}
+          <div style={{ textAlign: 'center', padding: '3rem 1rem', backgroundColor: 'white', borderRadius: '1rem', border: '1px dashed #cbd5e1' }}>
+            <p style={{ color: '#64748b', fontSize: '1rem' }}>
+              {projects.length === 0 ? 'No projects yet. Create your first project!' : 'No projects match your search.'}
             </p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: isMobile ? '1rem' : '1.5rem' }}>
             {filteredProjects.map((project) => (
               <div
                 key={project.id}
-                onClick={() => handleProjectClick(project)}
+                onClick={() => setSelectedProject(project)}
                 style={{
                   backgroundColor: 'white',
-                  padding: '1.5rem',
+                  padding: isMobile ? '1.25rem' : '1.5rem',
                   borderRadius: '1rem',
                   border: '1px solid #e2e8f0',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                   display: 'flex',
                   flexDirection: 'column',
-                  height: '100%',
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)';
-                  e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)';
-                  e.currentTarget.style.borderColor = '#cbd5e1';
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.boxShadow = '0 8px 15px -3px rgba(0,0,0,0.1)';
                 }}
-                onMouseLeave={(e) => {
+                onMouseLeave={e => {
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.borderColor = '#e2e8f0';
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#0f172a', marginBottom: '0.5rem' }}>
+                  <h3 style={{ fontSize: isMobile ? '1.1rem' : '1.25rem', fontWeight: '600', color: '#0f172a', marginBottom: '0.5rem' }}>
                     {project.name}
                   </h3>
-                  <p style={{ color: '#64748b', fontSize: '0.95rem', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  <p style={{ color: '#64748b', fontSize: '0.9rem', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {project.description || 'No description provided.'}
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '500' }}>
-                    Created: {new Date(project.created_at).toLocaleDateString()}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: '1.25rem',
+                  paddingTop: '1rem',
+                  borderTop: '1px solid #f1f5f9',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem',
+                }}>
+                  <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '500' }}>
+                    {new Date(project.created_at).toLocaleDateString()}
                   </span>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleEditProject(project); }}
                       style={{ ...btnStyle, padding: '0.35rem 0.75rem', fontSize: '0.8rem', backgroundColor: '#f1f5f9', color: '#475569' }}
-                      onMouseEnter={e => e.target.style.backgroundColor = '#e2e8f0'}
-                      onMouseLeave={e => e.target.style.backgroundColor = '#f1f5f9'}
+                      onMouseEnter={e => e.currentTarget.style.backgroundColor = '#e2e8f0'}
+                      onMouseLeave={e => e.currentTarget.style.backgroundColor = '#f1f5f9'}
                     >
                       Edit
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDeleteProject(project.id); }}
                       style={{ ...btnStyle, padding: '0.35rem 0.75rem', fontSize: '0.8rem', backgroundColor: '#fef2f2', color: '#ef4444' }}
-                      onMouseEnter={e => e.target.style.backgroundColor = '#fee2e2'}
-                      onMouseLeave={e => e.target.style.backgroundColor = '#fef2f2'}
+                      onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fee2e2'}
+                      onMouseLeave={e => e.currentTarget.style.backgroundColor = '#fef2f2'}
                     >
                       Delete
                     </button>
@@ -294,57 +315,39 @@ function Dashboard({ onLogout }) {
 
       {/* Modals */}
       {(showModal || showEditModal) && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: isMobile ? 'flex-end' : 'center', justifyContent: 'center', zIndex: 1000, padding: isMobile ? 0 : '1rem' }}>
 
           {showModal && (
-            <div style={{ backgroundColor: 'white', padding: '2.5rem', borderRadius: '1rem', width: '100%', maxWidth: '28rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: isMobile ? '1rem 1rem 0 0' : '1rem', width: '100%', maxWidth: isMobile ? '100%' : '28rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0f172a', marginBottom: '1.5rem' }}>Create New Project</h3>
               <form onSubmit={handleCreateProject}>
-                <input
-                  type="text"
-                  placeholder="Project Name"
-                  value={newProject.name}
+                <input type="text" placeholder="Project Name" value={newProject.name}
                   onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                  style={{ ...inputStyle, marginBottom: '1rem' }}
-                  required
-                />
-                <textarea
-                  placeholder="Description"
-                  value={newProject.description}
+                  style={{ ...inputStyle, marginBottom: '1rem' }} required />
+                <textarea placeholder="Description" value={newProject.description}
                   onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                  style={{ ...inputStyle, marginBottom: '1.5rem', resize: 'vertical', minHeight: '100px' }}
-                  rows="3"
-                />
+                  style={{ ...inputStyle, marginBottom: '1.5rem', resize: 'vertical', minHeight: '80px' }} rows="3" />
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
                   <button type="button" onClick={() => setShowModal(false)} style={{ ...btnStyle, backgroundColor: '#f1f5f9', color: '#475569' }}>Cancel</button>
-                  <button type="submit" style={{ ...btnStyle, backgroundColor: '#4f46e5', color: 'white' }}>Create Project</button>
+                  <button type="submit" style={{ ...btnStyle, backgroundColor: '#4f46e5', color: 'white' }}>Create</button>
                 </div>
               </form>
             </div>
           )}
 
           {showEditModal && editingProject && (
-            <div style={{ backgroundColor: 'white', padding: '2.5rem', borderRadius: '1rem', width: '100%', maxWidth: '28rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: isMobile ? '1rem 1rem 0 0' : '1rem', width: '100%', maxWidth: isMobile ? '100%' : '28rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0f172a', marginBottom: '1.5rem' }}>Edit Project</h3>
               <form onSubmit={handleUpdateProject}>
-                <input
-                  type="text"
-                  placeholder="Project Name"
-                  value={editingProject.name}
+                <input type="text" placeholder="Project Name" value={editingProject.name}
                   onChange={(e) => setEditingProject({ ...editingProject, name: e.target.value })}
-                  style={{ ...inputStyle, marginBottom: '1rem' }}
-                  required
-                />
-                <textarea
-                  placeholder="Description"
-                  value={editingProject.description}
+                  style={{ ...inputStyle, marginBottom: '1rem' }} required />
+                <textarea placeholder="Description" value={editingProject.description}
                   onChange={(e) => setEditingProject({ ...editingProject, description: e.target.value })}
-                  style={{ ...inputStyle, marginBottom: '1.5rem', resize: 'vertical', minHeight: '100px' }}
-                  rows="3"
-                />
+                  style={{ ...inputStyle, marginBottom: '1.5rem', resize: 'vertical', minHeight: '80px' }} rows="3" />
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
                   <button type="button" onClick={() => setShowEditModal(false)} style={{ ...btnStyle, backgroundColor: '#f1f5f9', color: '#475569' }}>Cancel</button>
-                  <button type="submit" style={{ ...btnStyle, backgroundColor: '#4f46e5', color: 'white' }}>Update Project</button>
+                  <button type="submit" style={{ ...btnStyle, backgroundColor: '#4f46e5', color: 'white' }}>Update</button>
                 </div>
               </form>
             </div>
@@ -352,12 +355,8 @@ function Dashboard({ onLogout }) {
         </div>
       )}
 
-      {/* Invite Modal */}
       {inviteProject && (
-        <InviteModal
-          project={inviteProject}
-          onClose={() => setInviteProject(null)}
-        />
+        <InviteModal project={inviteProject} onClose={() => setInviteProject(null)} />
       )}
     </div>
   );
