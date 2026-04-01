@@ -6,7 +6,7 @@ Collaborative Task & Project Management System
 
 TaskFlow eliminates "information silos" in small teams by merging a fluid drag-and-drop Kanban interface with a robust Django REST API. Your centralized "source of truth" for project progress and team accountability.
 
-Live Demo: https://taskflow-webapp.onrender.com
+Live Demo: https://taskflow-client-lo2o.onrender.com (Under Building trial)
 
 Note: Free-tier instances may take ~50s to wake up on first visit
 
