@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_URL = 'http://127.0.0.1:8000/api';
+// This switch ensures it works while you develop AND after you deploy
+const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://127.0.0.1:8000/api' 
+  : 'https://taskflow-webapp.onrender.com/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -17,9 +20,11 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error);
 });
 
+// Auth Endpoints
 export const login = (username, password) => 
-  api.post('/token/', { username, password });
+  api.post('/users/login/', { username, password }); // Double-check your Django URL path here!
 
+// Project Endpoints
 export const getProjects = () => 
   api.get('/projects/');
 
