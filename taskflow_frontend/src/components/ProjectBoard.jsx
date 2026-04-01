@@ -23,7 +23,7 @@ import ActivityLog from './Activitylog';
 import NotificationBell from './NotificationBell';
 import ProjectSettings from './ProjectSettings';
 
-const API_URL = 'http://127.0.0.1:8000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 const COLUMNS = [
   { id: 'todo', label: 'To Do', color: '#94a3b8' },
   { id: 'in_progress', label: 'In Progress', color: '#3b82f6' },
