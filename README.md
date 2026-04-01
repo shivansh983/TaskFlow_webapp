@@ -1,86 +1,10 @@
-🚀 TaskFlow – Collaborative Task & Project Management System
-TaskFlow is a modern, full-stack project management application designed to help teams organize workflows, track tasks, and collaborate effectively. It features a robust drag-and-drop Kanban board, role-based access control, activity tracking, and real-time notifications.
-
-🌐 Live Demo (In Progress)
-Project Link: https://taskflow-webapp.onrender.com
-
-⚠️ Status: Currently building on Render. UI updates and performance patches are being deployed daily.
-
-💡 The Problem & The Solution
-The Problem: Many small teams struggle with "information silos"—where task updates are buried in chat apps or lost in static spreadsheets. This leads to missed deadlines, double-work, and a lack of accountability.
-
-The Solution: TaskFlow provides a centralized source of truth. By combining a visual Kanban board with an automated Activity Log, every team member knows exactly:
-
-What needs to be done.
-
-Who is working on it.
-
-When the status last changed.
-
-✨ Core Features
-🔐 Authentication & Security: Secure user registration and login using JSON Web Tokens (JWT). Passwords are cryptographically hashed.
-
-👥 Role-Based Access Control (RBAC): Strict workspace permissions. Admins manage projects and invites; Members interact with assigned tasks.
-
-📋 Kanban Task Management: Seamlessly move tasks across 'To Do', 'In Progress', and 'Done' columns using a fluid drag-and-drop interface.
-
-🔔 Smart Notifications: In-app notification bell for task assignments and due-date reminders.
-
-⏱️ Activity Logging: A chronological "paper trail" of every change made within a project to ensure team accountability.
-
-🔍 Advanced Filtering: Instantly filter tasks by Status, Priority, or Assignee to find exactly what you need.
-
-💬 Task Collaboration: Leave comments and updates directly on task cards for context-specific communication.
-
-🏗️ Architecture & Tech Stack
-TaskFlow uses a Decoupled Client-Server Architecture to ensure scalability and a snappy user experience.
-
-Frontend (Client)
-React.js (Vite): Powering a responsive Single Page Application (SPA).
-
-@dnd-kit: Used for the specialized drag-and-drop Kanban logic.
-
-Axios Interceptors: Automatically handles JWT token refreshes and secure API headers.
-
-State Management: React Context and Hooks for efficient data flow.
-
-Backend (API)
-Django & DRF: A robust Python-based REST API that handles business logic and security.
-
-JWT Auth: Stateless authentication for secure cross-origin communication.
-
-Relational Database: Designed with optimized schemas for Users, Projects, and Tasks.
-
-📖 User Guide: How to Collaborate
-To test the collaborative power of TaskFlow, follow this flow:
-
-Create & Invite: Register as User A and create a new project. Use the Project Settings to invite User B via their registered email.
-
-Assign Tasks: Create a task and assign it to User B.
-
-Live Tracking: Log in as User B in an incognito window. Move the task to "In Progress."
-
-Audit Trail: As User A, refresh your project board and check the Activity Log to see the timestamp of User B's update.
-
-🛠️ Local Setup Instructions
-1. Backend (Django)
-Bash
-cd taskflow_backend
+🚀 TaskFlowThe Intelligent Collaborative Task & Project Management SystemTaskFlow is a production-ready, full-stack workspace designed to eliminate "information silos" in small teams. By merging a fluid drag-and-drop Kanban interface with a robust Django REST API, it provides a centralized "source of truth" for project progress and team accountability.🔗 Live Production LinkDeployment Status: 🏗️ Building on Render > Live Demo: https://taskflow-webapp.onrender.comNote: Free-tier instances may take ~50s to wake up on the first visit.💡 The "Why" Behind TaskFlowThe Problem: Small teams often lose track of "who is doing what" because updates are buried in chat logs or static spreadsheets, leading to missed deadlines and overlapping work.The Solution: TaskFlow solves this by providing a Visual Audit Trail. Every task movement is tracked, every role is defined, and every team member stays aligned through real-time updates and clear status visualization.✨ Core FeaturesFeatureDescription🔐 Secure AuthJWT-based authentication with cryptographically hashed passwords.📋 Kanban BoardFluid drag-and-drop task management powered by @dnd-kit.👥 Team RBACRole-Based Access Control (Admins vs. Members) for project security.⏱️ Activity LogA chronological history of every change made within a project.🔔 Smart AlertsIn-app notifications for task assignments and upcoming deadlines.🔍 Power SearchFilter by priority, status, or assignee to find tasks instantly.🏗️ Technical ArchitectureTaskFlow is built on a Decoupled Client-Server Architecture to ensure a snappy, modern user experience.Frontend (The Experience)React 18 (Vite): Blazing fast UI rendering.Axios Interceptors: Automated JWT handling for seamless, secure API sessions.Responsive CSS: A custom "Slate & Indigo" design system built for all screen sizes.Backend (The Engine)Django REST Framework: Robust API logic and high-performance routing.SimpleJWT: Stateless authentication for enhanced security.PostgreSQL: Scalable relational data modeling for Users, Projects, and Tasks.📖 User Guide: The Collaboration FlowTo see the true power of TaskFlow, try this Multi-User Test:Host: Register as User A and create a project called "TaskFlow Demo."Invite: Open Project Settings and invite User B (use a secondary email).Assign: Create a "High Priority" task and assign it to User B.Collaborate: Log in as User B (Incognito window). Move the task to Done.Verify: As User A, check your Activity Log—you'll see exactly when User B finished the task.🛠️ Local Installation1. Backend (Python/Django)Bashcd taskflow_backend
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
-2. Frontend (React)
-Bash
-cd taskflow_frontend
+2. Frontend (React/Vite)Bashcd taskflow_frontend
 npm install
 npm run dev
-🚧 Project Status & Future Roadmap
-TaskFlow is currently in Active Development.
-
-✅ Core Kanban and Auth features complete.
-
-🔄 Current Focus: Optimizing Render deployment and refining the mobile responsive CSS.
-
-🔜 Upcoming: Real-time WebSocket updates and automated email reminders.
+🚧 Roadmap & Future Patches[x] Core Kanban: Fully functional drag-and-drop logic.[x] Auth System: Secure JWT login/registration.[ ] Current Focus: Optimizing Render deployment & UI Polish.[ ] Upcoming: Real-time WebSockets (Django Channels) & Email Reminders.
