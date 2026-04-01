@@ -13,7 +13,22 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dv3ce4s2#(fxfu=tk7yt7
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 # ALLOWED_HOSTS must include your Render URL
-ALLOWED_HOSTS = ['taskflow-webapp.onrender.com', 'localhost', '127.0.0.1']
+# 1. Update Allowed Hosts
+ALLOWED_HOSTS = [
+    'taskflow-webapp.onrender.com',
+    'taskflow-client-lo2o.onrender.com', # Add your specific frontend ID here
+    'localhost',
+    '127.0.0.1'
+]
+
+# 2. Configure CORS
+CORS_ALLOW_ALL_ORIGINS = True 
+CORS_ALLOW_CREDENTIALS = True
+
+# 3. Add CSRF Trusted Origins (Crucial for Login/Signup)
+CSRF_TRUSTED_ORIGINS = [
+    "https://taskflow-client-lo2o.onrender.com"
+]
 
 # Application definition
 INSTALLED_APPS = [
