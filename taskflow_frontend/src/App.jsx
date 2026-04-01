@@ -1,49 +1,41 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import Login from './components/login';
-import Register from './components/register';
-import Dashboard from './components/dashboard';
+import Login from './components/Login';
+import Register from './components/Register';
+import Dashboard from './components/Dashboard';
 import './index.css';
 
-const API_URL = 'http://127.0.0.1:8000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [globalUserRole, setGlobalUserRole] = useState(null);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('access_token');
     return { headers: { Authorization: `Bearer ${token}` } };
   };
 
-  const fetchUserRole = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/users/me/`, getAuthHeaders());
-      console.log('User role from API:', response.data.role);
-      setGlobalUserRole(response.data.role);
-    } catch (err) {
-      console.error('Failed to fetch user role', err);
-      setGlobalUserRole('admin'); // Temporarily set as admin for testing
-    }
-  };
-
   useEffect(() => {
     const token = localStorage.getItem('access_token');
-    console.log('App loaded, token:', !!token);
-    if (token) {
-      console.log('Setting authenticated to true');
+    if (token && token.length > 0) {
       setIsAuthenticated(true);
-      fetchUserRole();
     } else {
-      console.log('No token found, showing login');
+      setIsAuthenticated(false);
     }
     setLoading(false);
   }, []);
 
+  // ← FIX: proper logout clears both tokens and resets all state
+  const handleLogout = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    setIsAuthenticated(false);
+    setShowRegister(false);
+  };
+
   if (loading) {
-    console.log('Showing loading screen');
     return (
       <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f8fafc', color: '#64748b', fontSize: '1.1rem', fontWeight: '500' }}>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -55,30 +47,21 @@ function App() {
     );
   }
 
-  console.log('App render - isAuthenticated:', isAuthenticated, 'showRegister:', showRegister);
-
   if (isAuthenticated) {
-    console.log('Rendering Dashboard');
     return (
       <Dashboard
-        onLogout={() => setIsAuthenticated(false)}
-        globalUserRole={globalUserRole}
+        onLogout={handleLogout}
       />
     );
   }
 
   if (showRegister) {
-    console.log('Rendering Register');
     return <Register onSwitch={() => setShowRegister(false)} />;
   }
 
-  console.log('Rendering Login');
   return (
     <Login
-      onLogin={() => {
-        setIsAuthenticated(true);
-        fetchUserRole();
-      }}
+      onLogin={() => setIsAuthenticated(true)}
       onSwitch={() => setShowRegister(true)}
     />
   );
